@@ -1,0 +1,48 @@
+version: "3"
+services:
+  nuxt:
+    image: node
+    hostname: nuxt.local
+    command: npm run dev
+      # npm i
+    working_dir: /src
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./nuxt:/src
+  fastify:
+    image: node
+    hostname: fastify.local
+    command: npm run dev
+      # npm i
+    working_dir: /src
+    # ports:
+      # - "8080:8080"
+    volumes:
+      - ./fastify:/src
+    environment:
+      POSTGRES_HOST: 192.168.0.135
+      POSTGRES_USER: ${POSTGRES_USER:-test}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-test}
+  # geofabrik:
+  #   image: postgres
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+  #     PGDATA: /data/postgres
+  #   volumes:
+  #     - postgres:/data/postgres
+  #   ports:
+  #     - "5432:5432"
+  nginx:
+    image: nginx:latest
+    ports:
+      - ${HOST_PORT_NGINX:-80}:80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - nuxt
+      - fastify
+volumes:
+  postgres:
