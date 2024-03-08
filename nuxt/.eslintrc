@@ -5,6 +5,8 @@
   "rules": {
     "comma-dangle": "off",
     "no-console": "off",
-    "arrow-parens": ["error", "as-needed"]
+    "arrow-parens": ["error", "as-needed"],
+    "vue/attribute-hyphenation": ["error", "never"],
+    "vue/singleline-html-element-content-newline": "off"
   }
 }
