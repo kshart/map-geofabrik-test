@@ -1,10 +1,9 @@
 <template>
   <div class="left-menu">
-    <input
+    <SearchBox
       v-model="ftsString"
-      placeholder="fts"
-    >
-    <button @click="serach">Search</button>
+      @search="search()"
+    />
     <div>
       <NominatimPlace
         v-for="place of searchResult"
@@ -18,6 +17,7 @@
 <script setup lang="ts">
 import apiNominatim from './apiNominatim'
 import type { SearchResultJsonV2, BoundingBox } from './apiNominatim'
+import SearchBox from './SearchBox.vue'
 import NominatimPlace from './NominatimPlace.vue'
 
 const props = defineProps<{
@@ -27,7 +27,7 @@ const props = defineProps<{
 const ftsString = ref('')
 const searchResult = ref<SearchResultJsonV2[]>([])
 
-function serach () {
+function search () {
   let polygon = undefined as BoundingBox|undefined
   // Полигон не объязательно должен быть квадратным 😱
   if (props.visiblePolygon && props.visiblePolygon.length === 5) {

@@ -3,9 +3,8 @@
     <div class="nominatim-place__title">{{ props.place.name }}</div>
     <div class="nominatim-place__subtitle">{{ props.place.display_name }}</div>
     <div class="nominatim-place__id">{{ props.place.place_id }}</div>
-    <div class="nominatim-place__">{{ props.place.category }}</div>
-    <div class="nominatim-place__">{{ props.place.type }}</div>
-    <a :href="`https://www.openstreetmap.org/node/${props.place.osm_id}`" target="blank">Osm</a>
+    <div>category: {{ props.place.category }}</div>
+    <div>type: {{ props.place.type }}</div>
     <!-- <pre>{{ props.place }}</pre> -->
     <div>
       <div v-for="(value, key) in props.place.extratags" :key="key">
@@ -17,15 +16,48 @@
         </div>
       </div>
     </div>
+    <PlaceButtons
+      :buttons="buttons"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { SearchResultJsonV2 } from './apiNominatim'
+import PlaceButtons from './PlaceButtons.vue'
 
 const props = defineProps<{
   place: SearchResultJsonV2
 }>()
+
+const attributes = {
+  site: computed(():string|undefined => {
+    return props.place?.extratags?.['contact:website']
+  })
+}
+const buttons = computed(() => {
+  const result = [
+    {
+      title: 'Osm',
+      href: `https://www.openstreetmap.org/node/${props.place.osm_id}`,
+      target: '_blank',
+    }, {
+      title: '🏳️',
+      onClick () {
+        console.log('hello dudes')
+      }
+    }
+  ]
+  if (attributes.site.value) {
+    result.unshift({
+      title: 'Сайт',
+      href: attributes.site.value,
+      target: '_blank',
+    })
+  }
+
+  return result
+})
 
 </script>
 
@@ -40,10 +72,14 @@ const props = defineProps<{
 }
 .nominatim-place__title {
   font-size: 1.3em;
+  color: #333;
 }
 .nominatim-place__subtitle {
   font-size: 0.85em;
+  color: #555;
 }
 .nominatim-place__id {
+  font-size: 0.85em;
+  color: #ccc;
 }
 </style>

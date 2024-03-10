@@ -3,7 +3,7 @@ services:
   nuxt:
     image: node
     hostname: nuxt.local
-    command: npm run dev
+    command: sh -c "rm -rf /tmp/nitro && npm run dev"
       # npm i
     working_dir: /src
     ports:
