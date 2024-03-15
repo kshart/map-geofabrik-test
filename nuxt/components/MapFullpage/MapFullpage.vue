@@ -3,16 +3,18 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
 import {
   Map,
   ScaleControl,
   NavigationControl,
 } from 'maplibre-gl'
 import type { LngLatBounds } from 'maplibre-gl'
+import type { MapEntity } from '@/components/MapFullpage/MapEntity'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-// const emit = defineEmits(['change-polygon'])
+const props = defineProps<{
+  entities: MapEntity[]
+}>()
 const emit = defineEmits<{(e: 'change-polygon', polygon: [string, string][]): void}>()
 
 const boundsToPolygon = (bounds: LngLatBounds): [string, string][] => {
@@ -36,7 +38,6 @@ const loadFlats = async (map: Map) => {
   })
   const groups = dataPoints
   for (const things of [groups]) {
-    console.log(things.length)
     const name = 'things'
     const color = '#047599'
     const geoJSON = {
@@ -267,6 +268,79 @@ const loadFlats = async (map: Map) => {
 }
 
 const mapRef = ref<HTMLElement|null>(null)
+
+const initEntitySource = (map: Map) => {
+  const source = 'my-entities'
+  const color = '#777'
+  const geoJSON = {
+    type: 'FeatureCollection',
+    features: []
+  } as GeoJSONFeature
+  map.addSource(source, {
+    type: 'geojson',
+    data: geoJSON,
+    cluster: true,
+    clusterMaxZoom: 14,
+    clusterRadius: 20,
+  })
+  map.addLayer({
+    id: source + 'clusters',
+    type: 'circle',
+    source,
+    filter: ['has', 'point_count'],
+    paint: {
+      'circle-color': color,
+      'circle-radius': 10,
+    }
+  })
+  map.addLayer({
+    id: source + '-cluster-count',
+    type: 'symbol',
+    source,
+    filter: ['has', 'point_count'],
+    layout: {
+      'text-field': [
+        'case',
+        ['>', ['get', 'point_count'], 9], '9+',
+        ['to-string', ['get', 'point_count']]
+      ],
+      'text-size': 11,
+    },
+    paint: {
+      'text-color': '#fff',
+    }
+  })
+  map.addLayer({
+    id: source + '-unclustered-point',
+    type: 'circle',
+    source,
+    filter: ['!', ['has', 'point_count']],
+    paint: {
+      'circle-color': ['get', 'color'],
+      'circle-radius': 10,
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#fff',
+    }
+  })
+  watch(() => props.entities, entities => {
+    const geoJSON = {
+      type: 'FeatureCollection',
+      features: [] as any[]
+    }
+    for (const entity of entities) {
+      geoJSON.features.push({
+        type: 'Feature',
+        properties: {
+          color,
+          name: entity.title,
+        },
+        geometry: entity.geometry
+      })
+    }
+    map.getSource(source)?.setData(geoJSON)
+  }, { immediate: true })
+}
+
 onMounted(() => {
   if (!mapRef.value) {
     return
@@ -314,7 +388,8 @@ onMounted(() => {
   map.addControl(nav, 'top-left')
 
   map.on('load', () => {
-    loadFlats(map)
+    // loadFlats(map)
+    initEntitySource(map)
     emit('change-polygon', boundsToPolygon(map.getBounds()))
   })
   map.on('move', () => {
@@ -323,6 +398,7 @@ onMounted(() => {
   // setTimeout(() => map.panTo([65.543743, 57.156362]), 1000)
   // setTimeout(() => map.panTo([65.543743, 57.256362]), 5000)
 })
+
 </script>
 
 <style scoped>

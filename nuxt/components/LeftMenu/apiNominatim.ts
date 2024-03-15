@@ -42,7 +42,7 @@ export interface SearchResultJsonV2 {
 export default {
   search (fts: string, viewbox?: BoundingBox): Promise<SearchResultJsonV2[]> {
     const lang = navigator.language
-    const limit = 10
+    const limit = 30
     const params = new URLSearchParams({
       q: fts,
       limit: String(limit),

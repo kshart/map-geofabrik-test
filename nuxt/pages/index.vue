@@ -3,9 +3,11 @@
     <LeftMenu
       class="menu-component"
       :visiblePolygon="visiblePolygon"
+      @fetch-entities="entities = $event"
     />
     <MapFullpage
       class="map-component"
+      :entities="entities"
       @change-polygon="visiblePolygon = $event"
     />
     <NominatimPlace />
@@ -13,11 +15,13 @@
 </template>
 
 <script setup lang="ts">
+import type { MapEntity } from '@/components/MapFullpage/MapEntity'
 useHead({
   title: 'Map 🙀'
 })
 
 const visiblePolygon = ref<[string, string][]|undefined>()
+const entities = ref<MapEntity[]>([])
 </script>
 
 <style scoped>

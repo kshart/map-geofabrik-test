@@ -4,6 +4,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxtjs/eslint-module',
   ],
+  css: ['@/assets/btn.scss'],
   nitro: {
     storage: {
       redis: {

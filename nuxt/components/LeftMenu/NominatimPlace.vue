@@ -7,7 +7,7 @@
     <div>type: {{ props.place.type }}</div>
     <!-- <pre>{{ props.place }}</pre> -->
     <div>
-      <div v-for="(value, key) in props.place.extratags" :key="key">
+      <div v-for="{ value, key } of attributes.extratags.value" :key="key">
         <div>
           {{ key }}
         </div>
@@ -16,6 +16,10 @@
         </div>
       </div>
     </div>
+    <OpeningHours
+      v-if="attributes.openingHours.value"
+      :value="attributes.openingHours.value"
+    />
     <PlaceButtons
       :buttons="buttons"
     />
@@ -25,6 +29,7 @@
 <script setup lang="ts">
 import type { SearchResultJsonV2 } from './apiNominatim'
 import PlaceButtons from './PlaceButtons.vue'
+import OpeningHours from './OpeningHours.vue'
 
 const props = defineProps<{
   place: SearchResultJsonV2
@@ -33,7 +38,26 @@ const props = defineProps<{
 const attributes = {
   site: computed(():string|undefined => {
     return props.place?.extratags?.['contact:website']
-  })
+  }),
+  openingHours: computed(():string|undefined => {
+    return props.place?.extratags?.opening_hours
+  }),
+  extratags: computed(() => {
+    const result = []
+    for (const key in props.place?.extratags) {
+      switch (key) {
+        case 'opening_hours':
+        case 'contact:website':
+          continue
+      }
+      const value = props.place?.extratags[key]
+      result.push({
+        key,
+        value,
+      })
+    }
+    return result
+  }),
 }
 const buttons = computed(() => {
   const result = [
@@ -65,7 +89,6 @@ const buttons = computed(() => {
 .nominatim-place {
   background: #eee;
   border: 1px solid #ddd;
-  margin: 15px;
   padding: 10px;
   font-size: 16px;
   border-radius: 10px;

@@ -1,0 +1,27 @@
+
+@use "sass:color";
+@import "@/assets/vars.scss";
+
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+.btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: $color-primary;
+  color: #fff;
+  padding: 5px 10px;
+  border: 1px solid #777;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: $hover-transition-duration background ease-out;
+  text-decoration: none;
+  &:hover {
+    background: color.adjust($color-primary, $lightness: -10%);
+    transition: $hover-transition-duration background ease-out;
+  }
+}
