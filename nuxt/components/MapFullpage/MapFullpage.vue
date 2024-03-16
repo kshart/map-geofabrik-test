@@ -10,12 +10,12 @@ import {
 } from 'maplibre-gl'
 import type { LngLatBounds } from 'maplibre-gl'
 import type { MapEntity } from '@/components/MapFullpage/MapEntity'
+import type LeftMenu from '@/components/LeftMenu/LeftMenu.vue'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 const props = defineProps<{
-  entities: MapEntity[]
+  refMenu: typeof LeftMenu|null
 }>()
-const emit = defineEmits<{(e: 'change-polygon', polygon: [string, string][]): void}>()
 
 const boundsToPolygon = (bounds: LngLatBounds): [string, string][] => {
   const sw = bounds.getSouthWest()
@@ -269,6 +269,7 @@ const loadFlats = async (map: Map) => {
 
 const mapRef = ref<HTMLElement|null>(null)
 
+const entities = ref<MapEntity[]>([])
 const initEntitySource = (map: Map) => {
   const source = 'my-entities'
   const color = '#777'
@@ -284,7 +285,7 @@ const initEntitySource = (map: Map) => {
     clusterRadius: 20,
   })
   map.addLayer({
-    id: source + 'clusters',
+    id: source + '-clusters',
     type: 'circle',
     source,
     filter: ['has', 'point_count'],
@@ -322,13 +323,51 @@ const initEntitySource = (map: Map) => {
       'circle-stroke-color': '#fff',
     }
   })
-  watch(() => props.entities, entities => {
+  map.on('click', source + '-clusters', async e => {
+    const features = map.queryRenderedFeatures(e.point, {
+      layers: [source + '-clusters']
+    })
+    const clusterId = features[0].properties.cluster_id
+    const zoom = await map.getSource('earthquakes').getClusterExpansionZoom(clusterId)
+    map.easeTo({
+      center: features[0].geometry.coordinates,
+      zoom
+    })
+  })
+  map.on('click', source + '-unclustered-point', e => {
+    const coordinates = e.features[0].geometry.coordinates.slice()
+
+    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+      coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360
+    }
+
+    console.log(e.features)
+    // new Popup()
+    //   .setLngLat(coordinates)
+    //   .setHTML(`magnitude: ${mag}<br>Was there a tsunami?: ${tsunami}`)
+    //   .addTo(map)
+  })
+  map.on('mouseenter', source + '-clusters', () => {
+    map.getCanvas().style.cursor = 'pointer'
+  })
+  map.on('mouseleave', source + '-clusters', () => {
+    map.getCanvas().style.cursor = ''
+  })
+  map.on('mouseenter', source + '-unclustered-point', () => {
+    map.getCanvas().style.cursor = 'pointer'
+  })
+  map.on('mouseleave', source + '-unclustered-point', () => {
+    map.getCanvas().style.cursor = ''
+  })
+  watch(entities, (entities: MapEntity[]) => {
+    console.log('updateentities', entities)
     const geoJSON = {
       type: 'FeatureCollection',
       features: [] as any[]
     }
     for (const entity of entities) {
       geoJSON.features.push({
+        id: entity.id,
         type: 'Feature',
         properties: {
           color,
@@ -390,15 +429,20 @@ onMounted(() => {
   map.on('load', () => {
     // loadFlats(map)
     initEntitySource(map)
-    emit('change-polygon', boundsToPolygon(map.getBounds()))
+    props.refMenu?.changePolygon(boundsToPolygon(map.getBounds()))
   })
   map.on('move', () => {
-    emit('change-polygon', boundsToPolygon(map.getBounds()))
+    props.refMenu?.changePolygon(boundsToPolygon(map.getBounds()))
   })
   // setTimeout(() => map.panTo([65.543743, 57.156362]), 1000)
   // setTimeout(() => map.panTo([65.543743, 57.256362]), 5000)
 })
 
+defineExpose({
+  updateEntities (e: MapEntity[]) {
+    entities.value = e
+  }
+})
 </script>
 
 <style scoped>

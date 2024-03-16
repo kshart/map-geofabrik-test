@@ -19,45 +19,51 @@
 </template>
 
 <script setup lang="ts">
-import type { MapEntity } from '../MapFullpage/MapEntity'
 import type { SearchResultJsonV2, BoundingBox } from './apiNominatim'
 import apiNominatim from './apiNominatim'
 import SearchBox from './SearchBox.vue'
 import NominatimPlace from './NominatimPlace.vue'
+import type MapFullpage from '@/components/MapFullpage/MapFullpage.vue'
 
 const props = defineProps<{
-  visiblePolygon?: [string, string][]
+  refMap: typeof MapFullpage|null
 }>()
-const emit = defineEmits<{(e: 'fetch-entities', entities: MapEntity[]): void}>()
 
 const ftsString = ref('')
 const searchResult = ref<SearchResultJsonV2[]>([])
 
+const visiblePolygon = ref<[string, string][]|null>(null)
 const isLoading = ref(false)
 function search () {
   let polygon = undefined as BoundingBox|undefined
   // Полигон не объязательно должен быть квадратным 😱
-  if (props.visiblePolygon && props.visiblePolygon.length === 5) {
-    polygon = [props.visiblePolygon[0][0], props.visiblePolygon[0][1], props.visiblePolygon[2][0], props.visiblePolygon[2][1]]
+  if (visiblePolygon.value && visiblePolygon.value.length === 5) {
+    polygon = [visiblePolygon.value[0][0], visiblePolygon.value[0][1], visiblePolygon.value[2][0], visiblePolygon.value[2][1]]
   }
   isLoading.value = true
   apiNominatim.search(ftsString.value, polygon)
     .then(result => {
       searchResult.value = result
       const entities = result.map(r => ({
+        id: r.osm_id,
         geometry: {
           type: 'Point',
           coordinates: [r.lon, r.lat],
         },
         title: r.name,
       }))
-      emit('fetch-entities', entities)
+      props.refMap?.updateEntities(entities)
     })
     .finally(() => {
       isLoading.value = false
     })
 }
 
+defineExpose({
+  changePolygon (polygon: [string, string][]) {
+    visiblePolygon.value = polygon
+  }
+})
 </script>
 
 <style scoped lang="scss">
@@ -69,9 +75,10 @@ function search () {
   position: relative;
   display: flex;
   flex-direction: column;
+  pointer-events: none;
 }
 .search-box {
-
+  pointer-events: all;
 }
 .result-list {
   /* padding-top: 61px; */
@@ -82,6 +89,7 @@ function search () {
     &:first-child {
       margin-top: 0;
     }
+    pointer-events: all;
   }
   &::-webkit-scrollbar {
     width: 8px;

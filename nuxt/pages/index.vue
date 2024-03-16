@@ -1,27 +1,28 @@
 <template>
   <div class="page-index">
     <LeftMenu
+      ref="refMenu"
       class="menu-component"
-      :visiblePolygon="visiblePolygon"
-      @fetch-entities="entities = $event"
+      :refMap="refMap"
     />
     <MapFullpage
+      ref="refMap"
       class="map-component"
-      :entities="entities"
-      @change-polygon="visiblePolygon = $event"
+      :refMenu="refMenu"
     />
     <NominatimPlace />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { MapEntity } from '@/components/MapFullpage/MapEntity'
+import type LeftMenu from '@/components/LeftMenu/LeftMenu.vue'
+import type MapFullpage from '@/components/MapFullpage/MapFullpage.vue'
 useHead({
   title: 'Map 🙀'
 })
 
-const visiblePolygon = ref<[string, string][]|undefined>()
-const entities = ref<MapEntity[]>([])
+const refMap = ref<typeof MapFullpage|null>(null)
+const refMenu = ref<typeof LeftMenu|null>(null)
 </script>
 
 <style scoped>
