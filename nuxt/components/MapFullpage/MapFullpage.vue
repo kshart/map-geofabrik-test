@@ -29,6 +29,83 @@ const boundsToPolygon = (bounds: LngLatBounds): [string, string][] => {
   ]
 }
 
+const initSprites = (map: Map) => {
+  map.addLayer({
+    id: 'sprite',
+    type: 'symbol',
+    source: 'carto',
+    'source-layer': 'poi',
+    filter: [
+      'all',
+      ['==', '$type', 'Point'],
+      [
+        'in',
+        'class',
+        'campsite',
+        'castle',
+        'lodging',
+        'town_hall',
+        'zoo'
+      ],
+      ['!in', 'subclass', 'dormitory']
+    ],
+    layout: {
+      'icon-size': 1,
+      'text-font': [
+        'Montserrat Regular Italic',
+        'Open Sans Italic',
+        'Noto Sans Regular',
+        'HanWangHeiLight Regular',
+        'NanumBarunGothic Regular'
+      ],
+      'text-size': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        16,
+        11,
+        22,
+        14
+      ],
+      'icon-image': 'bar_11',
+      'text-field': '{name}',
+      visibility: 'visible',
+      'icon-anchor': 'bottom',
+      'icon-offset': [
+        0,
+        0
+      ],
+      'text-anchor': 'top',
+      'text-optional': true,
+      'symbol-sort-key': [
+        'to-number',
+        ['get', 'rank']
+      ],
+      'icon-allow-overlap': false,
+      'text-allow-overlap': false
+    },
+    paint: {
+      'icon-color': 'hsl(27, 97%, 14%)',
+      'text-color': 'hsl(27, 97%, 14%)',
+      'icon-halo-blur': 0.5,
+      'text-halo-blur': 0.5,
+      'icon-halo-color': 'hsl(0, 0%, 100%)',
+      'icon-halo-width': 1.5,
+      'text-halo-color': 'hsl(0, 0%, 100%)',
+      'text-halo-width': 1.5
+    }
+  })
+  map.on('click', 'sprite', e => {
+    console.log(e)
+  })
+  map.on('mouseenter', 'sprite', () => {
+    map.getCanvas().style.cursor = 'pointer'
+  })
+  map.on('mouseleave', 'sprite', () => {
+    map.getCanvas().style.cursor = ''
+  })
+}
+
 const loadFlats = async (map: Map) => {
   const bounds = map.getBounds()
   const dataPoints = await $fetch('/api/getThings', {
@@ -386,7 +463,8 @@ onMounted(() => {
   }
   const map = new Map({
     container: mapRef.value,
-    style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+    style: '/style3.json',
+    // style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
     /* {
       'version': 8,
       'sources': {
@@ -428,6 +506,7 @@ onMounted(() => {
 
   map.on('load', () => {
     // loadFlats(map)
+    initSprites(map)
     initEntitySource(map)
     props.refMenu?.changePolygon(boundsToPolygon(map.getBounds()))
   })

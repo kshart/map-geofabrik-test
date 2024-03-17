@@ -1,0 +1,6 @@
+{
+    "pbfFile": "/home/user/ural-fed-district-latest.osm.pbf",
+    "workingDir": "/var/www/mbtiles/",
+    "outDir": "/var/www/mbtiles/out",
+    "maxRamMb": 2000
+}
